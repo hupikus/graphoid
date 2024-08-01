@@ -2,9 +2,12 @@
 Graphoid is the language of the most univrse's intelligent civilization. This code transfers input from english letters to a picture.
 
 Wanna try? Here's the link examples:
-  http://graphoid.byethost8.com/?keyword=meeta+wuila
+  http://graphoid.42web.io/?keyword=meeta+wuila
   
   http://graphoid.42web.io/?keyword=hraken
+
+  [tanoshimu](http://graphoid.42web.io/?keyword=tanosimu) 
+  [marowuinei](http://graphoid.42web.io/?keyword=marowuinei) 
 
 "meuta wuila" is the name of their god. You may change this keyword on anything else from the supported letters:
   a;
