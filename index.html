@@ -1,19 +1,34 @@
 <?php
 $width = 60;
+$height = 60;
 $deltaX = $width / 6;
 $deltaY = -$width / 6;
-$offset = 0;
 
 if(isset($_GET["keyword"]))
 {
     $request = htmlspecialchars($_GET["keyword"]);
     $request = mb_strtolower($request);
     $request = preg_replace('/[^aehiklmnoprstuvw+\s]/ui', "", $request);
-    $request = mb_strimwidth($request, 0, 16, "");
-
+    
     $request = str_replace(array("wi", "wui"), "i", $request);
     $request = str_replace("w", "v", $request);
     $request = str_replace(array("ee", "oo", "ii"), array("eu", "ou", "iu"), $request);
+
+    $full_request = mb_strimwidth($request, 0, 48, "");
+
+    
+    $reqlen = 0;
+    if(strlen($request) > 16)
+    {
+        $reqlen = 1;
+        if(strlen($request) > 32)
+        {
+            $reqlen = 2;
+        }
+    }
+    $height = 60 * ($reqlen + 1);
+
+    
 
     $encrypt = array(
         "a" => array(1, 3, 6, 8, 5, 4),
@@ -38,12 +53,10 @@ if(isset($_GET["keyword"]))
 else
 {
     $request = "a";
+    $reqlen = 0;
     $encrypt = array("a" => array(1, 3, 6, 8, 5, 4));
 }
 
-$len = strlen($request);
-
-$request = str_split($request, 1);
 
 
 
@@ -58,6 +71,7 @@ function translate($num)
         global $dots;
         global $num;
         global $offset;
+        global $reqlen;
 
         $x = (($value % 3) * $width / 3) + $deltaX;
 
@@ -66,7 +80,7 @@ function translate($num)
         {
             $y += $width / 3;
         }
-
+        $y += $reqlen * $width;
 
         $dots[$key * 2] = $x + $offset;
         $dots[$key * 2 + 1] = $y;
@@ -76,36 +90,45 @@ function translate($num)
 
 }
 
+$len = min(strlen($request), 16);
 
-
-$img = imageCreate($width * $len, $width);
+$img = imageCreate($width * $len, $height);
 $color = imageColorAllocate($img, 6, 12, 30);
-
-$strokeColor = imagecolorallocate($img, 25, 255, 178);
 
 imageFilledRectangle($img, 0, 0, imageSX($img), imageSY($img), $color);
 
-for ($x = $width / 6; $x <= imageSX($img) - $width / 6; $x = $x + $width / 3) {
-    for ($y = $width / 6; $y <= imageSY($img) - $width / 6; $y = $y + $width / 3) {
-        imagefilledellipse($img, $x, $y, $width / 7, $width / 7, $strokeColor);
-    }
-}
+$strokeColor = imagecolorallocate($img, 25, 255, 178);
 
-imagesetthickness($img, $width / 24);
 
-foreach($request as $let)
+while($reqlen >= 0)
 {
-    global $encrypt;
+    $offset = 0;
+    
+    $request = substr($full_request, $reqlen * 16, 16);
+    $request = str_split($request, 1);
 
-    $nums = $encrypt[$let];
-    $dots = array();
-    translate($nums);
-    imageOpenPolygon($img, $dots, $strokeColor);
+    for ($x = $width / 6; $x <= imageSX($img) - $width / 6; $x = $x + $width / 3) {
+        for ($y = $width / 6; $y <= imageSY($img) - $width / 6; $y = $y + $width / 3) {
+            imagefilledellipse($img, $x, $y, $width / 7, $width / 7, $strokeColor);
+        }
+    }
+
+    imagesetthickness($img, $width / 24);
+
+    foreach($request as $let)
+    {
+        global $encrypt;
+
+        $nums = $encrypt[$let];
+        $dots = array();
+        translate($nums);
+        imageOpenPolygon($img, $dots, $strokeColor);
     
     
-    $offset += $width;
+        $offset += $width;
+    }
+    $reqlen -= 1;
 }
-
 
 Header("Content-type: image/jpeg");
 imageJpeg($img);
