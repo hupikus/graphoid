@@ -1,16 +1,30 @@
 <?php
 $width = 60;
-$height = 60;
+
+if(isset($_GET["width"]))
+{
+    $width = min(max(intval($_GET["width"]), 27), 180);
+}
+
+$height = $width;
 $deltaX = $width / 6;
 $deltaY = -$width / 6;
+$default = false;
 
-if(isset($_GET["keyword"]))
+if(!empty($_GET["keyword"]))
 {
     $request = htmlspecialchars($_GET["keyword"]);
     $request = mb_strtolower($request);
-    $request = preg_replace('/[^aehiklmnoprstuvw+\s]/ui', "", $request);
-    
+
+    $request = preg_replace('/[^abdeghiklmnoprstuvwxzабвгдезиклмнопрстухц+\s]/ui', "", $request);
+
+    $request = str_replace(array("а", "б", "в", "г", "д", "е", "з", "и", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "х", "ц"), array("a", "p", "v", "k", "t", "e", "s", "i", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "h", "ts"), $request);
     $request = str_replace(array("wi", "wui"), "i", $request);
+    $request = str_replace("z", "ts", $request);
+    $request = str_replace("g", "k", $request);
+    $request = str_replace("d", "t", $request);
+    $request = str_replace("b", "p", $request);
+    $request = str_replace("x", "k", $request);
     $request = str_replace("w", "v", $request);
     $request = str_replace(array("ee", "oo", "ii"), array("eu", "ou", "iu"), $request);
 
@@ -26,7 +40,7 @@ if(isset($_GET["keyword"]))
             $reqlen = 2;
         }
     }
-    $height = 60 * ($reqlen + 1);
+    $height = $width * ($reqlen + 1);
 
     
 
@@ -52,9 +66,7 @@ if(isset($_GET["keyword"]))
 }
 else
 {
-    $request = "a";
-    $reqlen = 0;
-    $encrypt = array("a" => array(1, 3, 6, 8, 5, 4));
+        $default = true;
 }
 
 
@@ -91,6 +103,17 @@ function translate($num)
 }
 
 $len = min(strlen($request), 16);
+if($len == 0)
+{
+    $default = true;
+}
+if($default)
+{
+    $request = "a";
+    $reqlen = 0;
+    $encrypt = array("a" => array(1, 3, 6, 8, 5, 4));
+    $len = 1;
+}
 
 $img = imageCreate($width * $len, $height);
 $color = imageColorAllocate($img, 6, 12, 30);
@@ -98,7 +121,6 @@ $color = imageColorAllocate($img, 6, 12, 30);
 imageFilledRectangle($img, 0, 0, imageSX($img), imageSY($img), $color);
 
 $strokeColor = imagecolorallocate($img, 25, 255, 178);
-
 
 while($reqlen >= 0)
 {
